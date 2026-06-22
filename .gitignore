@@ -9,6 +9,7 @@ worker/.env
 
 # Local database storage & build files
 api/data/
+data/
 worker/tmp/
 tmp/
 builds/
