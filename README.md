@@ -1,14 +1,16 @@
 # mybuild: Self-Hosted Expo Mobile App Build System
 
-এটি একটি সেলফ-হোস্টেড মোবাইল অ্যাপ বিল্ড সিস্টেম (Expo EAS-এর মতো)। এই প্রজেক্টের মাধ্যমে আপনি আপনার নিজের VPS সার্ভারে অ্যান্ড্রয়েড অ্যাপ বিল্ড করতে পারবেন, যার ফলে আপনার নিজের ল্যাপটপে কোনো Android SDK বা Java সেটআপ করতে হবে না।
+**English** | [বাংলা সংস্করণ (Bangla Version)](README.bn.md)
+
+A complete self-hosted mobile app build system (like Expo EAS) designed to compile Android APKs/AABs on your own Ubuntu VPS. With this setup, you don't need any local Android SDK, Java (JDK), or Gradle configuration on your local laptop.
 
 ---
 
-## 🚀 কিভাবে ব্যবহার করবেন (ধাপে ধাপে গাইড)
+## 🚀 How to Use (Step-by-Step Guide)
 
-### ধাপ ১: GitHub-এ কোড পুশ করা (ল্যাপটপ থেকে)
+### Step 1: Push Code to GitHub (From your local laptop)
 
-প্রথমে আপনার লোকাল কোডগুলো GitHub-এ পুশ করুন। আপনার রিপোজিটরি হিসেবে ইতিমধ্যে `alemprogramer/my-app-builder` সেট করা হয়েছে। টার্মিনালে নিচের কমান্ডগুলো রান করুন:
+First, push your local code to your GitHub repository. Your repository has already been configured as `alemprogramer/my-app-builder`. Run the following commands in your local terminal:
 
 ```bash
 git add .
@@ -19,21 +21,21 @@ git push -u origin main
 
 ---
 
-### ধাপ ২: VPS সার্ভার সেটআপ করা (One-Command Setup)
+### Step 2: VPS Server Setup (One-Command Setup)
 
-সার্ভারে বিল্ড রান করার জন্য আপনার একটি Ubuntu VPS প্রয়োজন। নুন্যতম **4GB RAM** এবং **2 Core CPU** সম্বলিত একটি VPS ব্যবহার করুন।
+To run compiles on your server, you need an Ubuntu VPS. We recommend at least **4GB RAM** and **2 CPU Cores**.
 
-১. আপনার VPS সার্ভারে SSH দিয়ে লগইন করুন:
+1. SSH into your VPS server:
    ```bash
    ssh root@your_vps_ip
    ```
 
-২. সার্ভারে সরাসরি এই ওয়ান-কমান্ড ইনস্টলারটি রান করুন:
+2. Run the one-command installer script directly on the server:
    ```bash
    curl -sL https://raw.githubusercontent.com/alemprogramer/my-app-builder/main/scripts/install.sh | bash
    ```
 
-৩. স্ক্রিপ্টটি রান হওয়া শেষ হলে টার্মিনালে এইরকম একটি কনফিগারেশন মেসেজ দেখতে পাবেন:
+3. Once the script finishes installing, you will see a configuration message like this:
    ```text
    ==================================================
    ✔ installation completed successfully!
@@ -46,129 +48,125 @@ git push -u origin main
    API Server URL:  http://123.45.67.89:4000
    API Access Key:  a1b2c3d4e5f6g7h8...
    ```
-   **API Server URL** এবং **API Access Key** টি নোট করে রাখুন।
+   **Important:** Write down the **API Server URL** and **API Access Key**.
 
 ---
 
-### ধাপ ৩: আপনার ল্যাপটপে CLI সেটআপ করা
+### Step 3: Setup CLI on your laptop
 
-আপনার ল্যাপটপে কোনো Android Studio বা JDK লাগবে না, শুধু Node.js থাকলেই হবে।
+Your local laptop only needs Node.js installed. You do not need Android Studio or JDK.
 
-১. আপনার ল্যাপটপের টার্মিনাল থেকে CLI-টি গ্লোবালি ইনস্টল করুন:
+1. Install the CLI globally from your terminal:
    ```bash
    npm install -g mybuilder-cli
    ```
-   *(ইনস্টলেশন চলাকালীন সময়েই টার্মিনাল আপনার কাছে স্বয়ংক্রিয়ভাবে **VPS URL** এবং **API Key** জানতে চাইবে। সেগুলো দিয়ে দিলে সেটআপ সম্পন্ন হয়ে যাবে।)*
+   *(During installation, the CLI will automatically ask you to input your **VPS URL** and **API Access Key** to complete the setup.)*
 
-২. যদি কোনো কারণে ইনস্টলেশনের সময় ইনপুট দিতে না পারেন, তবে পরবর্তীতে নিচের কমান্ডটি রান করে নতুন করে কানেক্ট করতে পারবেন:
+2. If you are unable to enter inputs during installation, you can initialize or reconfigure settings later:
    ```bash
    mybuild init http://YOUR_VPS_IP:4000 YOUR_API_ACCESS_KEY
    ```
 
 ---
 
-### ধাপ ৪: অ্যাপ বিল্ড করা (Build Android APK)
+### Step 4: Build your App (Build Android APK)
 
-১. আপনার ল্যাপটপের যেকোনো Expo প্রজেক্টের ফোল্ডারে যান (যেখানে `app.json` বা `package.json` আছে)।
-২. এবার নিচের কমান্ডটি রান করুন:
+1. Navigate to the root directory of any Expo project on your laptop (the folder containing `app.json` or `package.json`).
+2. Run the build command:
    ```bash
    mybuild build android
    ```
 
-**কিভাবে কাজ করবে?**
-- CLI আপনার প্রজেক্টকে জিপ করে সার্ভারে পাঠাবে (ভারী `node_modules` বাদ দিয়ে)।
-- সার্ভার ফাইলটি রিসিভ করে বিল্ড কিউতে যোগ করবে।
-- ব্যাকএন্ডে রান হওয়া ওয়ার্কার ফাইলটি এক্সট্র্যাক্ট করে `npm install` এবং `expo prebuild` শেষ করে অ্যান্ড্রয়েড বিল্ড শুরু করবে।
-- বিল্ডের রিয়েল-টাইম লগ আপনার ল্যাপটপের টার্মিনালে দেখতে পাবেন।
-- বিল্ড শেষ হলে সরাসরি APK ডাউনলোড করার একটি লিংক পাবেন।
+**How it works:**
+- The CLI archives your project files into a zip payload (automatically excluding `node_modules`, `.git`, etc.).
+- The zip file is uploaded to the VPS API Server.
+- The server queues the job to Redis.
+- The background build worker extracts the project, runs `npm install` (or yarn/bun), executes `npx expo prebuild`, and runs `./gradlew assembleRelease` to compile.
+- Real-time build logs are streamed directly to your laptop's terminal.
+- Once compilation completes, you'll receive a direct download link for the release APK.
 
-* **বিল্ড ক্যানসেল বা বাতিল করতে (Cancel Build):**
-   যদি কোনো বিল্ড কিউতে থাকে বা রানিং অবস্থায় ক্যানসেল করতে চান, তবে ল্যাপটপের টার্মিনাল থেকে রান করুন:
+* **Cancel a Build (Cancel Build):**
+   To cancel an active build or remove a build from the queue, run:
    ```bash
    mybuild cancel <build-id>
    ```
 
-* **চলমান বিল্ডের লাইভ লগ পুনরায় দেখতে (Watch Logs Live):**
-   যদি কখনো কানেকশন ডিসকানেক্ট হয়ে যায় এবং আবার রানিং বিল্ডের লাইভ লগ দেখতে চান, তবে রান করুন:
+* **Reconnect to Live Logs (Watch Logs Live):**
+   If your connection drops, reconnect and stream the logs of an active build:
    ```bash
    mybuild logs <build-id> -w
    ```
 
 ---
 
-## 💻 লোকাল CLI কমান্ডের তালিকা (CLI Cheatsheet)
+## 💻 CLI Commands Cheatsheet
 
-আপনার ল্যাপটপের টার্মিনাল থেকে প্রজেক্ট কন্ট্রোল করার জন্য সব কমান্ডের তালিকা নিচে দেওয়া হলো:
-
-### ১. সার্ভার কানেক্ট বা কনফিগার করা
-* **কানেকশন সেটআপ বা পরিবর্তন করতে:**
+### 1. Connection & Authentication Setup
+* **Initialize or update connection settings:**
   ```bash
   mybuild init http://YOUR_VPS_IP:4000 YOUR_API_KEY
   ```
-* **শুধুমাত্র API Key আপডেট করতে:**
+* **Update the API Key only:**
   ```bash
   mybuild login YOUR_API_KEY
   ```
 
-### ২. বিল্ড রান এবং কন্ট্রোল করা
-* **অ্যান্ড্রয়েড রিলিজ বিল্ড শুরু করতে:**
-  *(অবশ্যই এক্সপো প্রজেক্টের রুটে গিয়ে রান করতে হবে)*
+### 2. Build Commands
+* **Start Android release build (must run from Expo project root):**
   ```bash
   mybuild build android
   ```
-* **রানিং বা কিউতে থাকা বিল্ড বাতিল করতে:**
+* **Cancel active or queued build:**
   ```bash
   mybuild cancel <build-id>
   ```
 
-### ৩. বিল্ড স্ট্যাটাস এবং হিস্টোরি চেক করা
-* **সাম্প্রতিক ১০টি বিল্ডের লিস্ট ও সংক্ষেপ দেখতে:**
+### 3. Check Status & History
+* **List the last 10 builds:**
   ```bash
   mybuild status
   ```
-* **নির্দিষ্ট একটি বিল্ডের ডাউনলোড লিংক ও বিস্তারিত দেখতে:**
+* **View detailed status and download link for a specific build:**
   ```bash
   mybuild status <build-id>
   ```
 
-### ৪. বিল্ডের লগ দেখা
-* **বিল্ড শেষ হওয়ার পর পুরো লগ একবারে দেখতে:**
+### 4. Fetch Logs
+* **View the full log file once build is finished:**
   ```bash
   mybuild logs <build-id>
   ```
-* **চলমান বা রানিং বিল্ডের লাইভ লগে পুনরায় যুক্ত হতে (রিয়েল-টাইম ওয়াচ):**
+* **Stream live logs for a running build:**
   ```bash
   mybuild logs <build-id> -w
   ```
 
-### ৫. 🚀 সরাসরি SSH/SCP দিয়ে ল্যাপটপে APK ডাউনলোড করা (বিকল্প উপায়)
-যদি ব্রাউজারে ডাউনলোড স্পিড কম থাকে বা ডাউনলোড আটকে যাওয়ার সমস্যা হয়, তবে ল্যাপটপের টার্মিনাল (সার্ভার নয়) থেকে সরাসরি এই কমান্ড দিয়ে আপনার **Downloads** ফোল্ডারে APK ফাইলটি নামিয়ে নিতে পারেন:
+### 5. 🚀 Direct SSH/SCP Download (Fast Alternative)
+If you have slow download speeds or the download fails on port 4000 due to network constraints, run this command in your **local terminal** (not on the VPS) to download the APK directly over port 22 (SSH) to your **Downloads** folder:
 ```bash
 scp root@YOUR_VPS_IP:/opt/mybuild/data/builds/<build-id>/*.apk ~/Downloads/
 ```
 
 ---
 
-## 🛠 সার্ভার মেইনটেন্যান্স (PM2 Commands)
+## 🛠 VPS Server Maintenance (PM2 Commands)
 
-যদি কখনো সার্ভার প্রসেস চেক বা রিস্টার্ট করতে চান, তবে VPS সার্ভারে SSH দিয়ে ঢুকে নিচের কমান্ডগুলো ব্যবহার করতে পারেন:
+If you need to inspect or restart processes on your VPS, SSH into the server and use these commands:
 
-* **রানিং প্রসেস দেখতে:**
+* **View running processes status:**
   ```bash
   pm2 status
   ```
 
-* **বিল্ড লগের লাইভ আউটপুট দেখতে:**
+* **Inspect live PM2 logs output:**
   ```bash
   pm2 logs
   ```
 
-* **ব্যাকএন্ড ও ওয়ার্কার রিস্টার্ট করতে:**
+* **Restart backend API and worker processes:**
   ```bash
   pm2 restart all
   ```
 
-* **বিল্ড ডেটা ডিরেক্টরি লোকেশন:** `/opt/mybuild/data`
-* **বিল্ড লগের আসল লোকেশন:** `/opt/mybuild/data/builds/<build-id>/logs.txt`
-
-
+* **Data directory path on VPS:** `/opt/mybuild/data`
+* **Raw build log file path on VPS:** `/opt/mybuild/data/builds/<build-id>/logs.txt`
