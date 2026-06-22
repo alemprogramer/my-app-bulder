@@ -280,6 +280,11 @@ program
           console.log(`========================================`);
           console.log(`Reason: ${buildInfo.error || 'Unknown error'}`);
           console.log(`========================================\n`);
+        } else if (buildInfo.status === 'cancelled') {
+          isFinished = true;
+          console.log(`\n========================================`);
+          console.log(`⚠ BUILD CANCELLED BY USER`);
+          console.log(`========================================\n`);
         }
       }
 
@@ -354,6 +359,31 @@ program
       console.log(res.data);
     } catch (err) {
       console.error('✖ Failed to fetch logs:', err.message);
+    }
+  });
+
+// Command: Cancel Build
+program
+  .command('cancel')
+  .argument('<id>', 'Build ID to cancel')
+  .description('Cancel a queued or active build job')
+  .action(async (id) => {
+    const client = getClient();
+    try {
+      console.log(`Sending cancellation request for build ${id}...`);
+      const res = await client.post(`/build/${id}/cancel`);
+      if (res.data && res.data.success) {
+        console.log(`✔ Build ${id} cancelled successfully.`);
+      } else {
+        console.log(`✖ Failed to cancel build: ${res.data.error || 'Unknown response'}`);
+      }
+    } catch (err) {
+      console.error('✖ Failed to cancel build:');
+      if (err.response) {
+        console.error(`  Server error (${err.response.status}):`, err.response.data.error || err.response.statusText);
+      } else {
+        console.error(`  Error message: ${err.message}`);
+      }
     }
   });
 

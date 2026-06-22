@@ -15,10 +15,36 @@ const WORKER_DIR = process.env.WORKER_DIR || '/tmp/mybuild-worker';
 fs.mkdirSync(WORKER_DIR, { recursive: true });
 fs.mkdirSync('/tmp/mybuild-home', { recursive: true });
 
+// Track active build state for cancellation
+let activeBuildId = null;
+let activeChildProcess = null;
+
 // Initialize Redis
 const redis = new Redis(REDIS_URL);
 redis.on('error', (err) => console.error('Redis worker connection error:', err));
 redis.on('connect', () => console.log('✔ Worker connected to Redis'));
+
+// Initialize Redis for PubSub
+const subRedis = new Redis(REDIS_URL);
+subRedis.on('error', (err) => console.error('Redis PubSub error:', err));
+subRedis.on('connect', () => {
+  console.log('✔ Worker PubSub connected');
+  subRedis.subscribe('mybuild_cancellation');
+});
+
+subRedis.on('message', (channel, message) => {
+  if (channel === 'mybuild_cancellation' && message === activeBuildId) {
+    console.log(`[CANCELLATION] Cancelling active build job: ${activeBuildId}`);
+    if (activeChildProcess) {
+      console.log(`[CANCELLATION] Terminating active compiler process...`);
+      try {
+        activeChildProcess.kill('SIGKILL');
+      } catch (err) {
+        console.error(`[CANCELLATION] Failed to terminate child process: ${err.message}`);
+      }
+    }
+  }
+});
 
 // Helper to run commands and pipe output to log file
 function runCommand(cmd, args, cwd, writeStream) {
@@ -41,6 +67,8 @@ function runCommand(cmd, args, cwd, writeStream) {
       }
     });
 
+    activeChildProcess = child;
+
     child.stdout.on('data', (data) => {
       writeStream.write(data);
     });
@@ -50,6 +78,7 @@ function runCommand(cmd, args, cwd, writeStream) {
     });
 
     child.on('close', (code) => {
+      activeChildProcess = null;
       if (code === 0) {
         writeStream.write(`[SYSTEM] Success: ${cmd} completed successfully.\n`);
         resolve();
@@ -104,6 +133,7 @@ async function processQueue() {
     }
 
     const { id, zipPath, platform, projectName, logFile } = jobData;
+    activeBuildId = id;
     const buildTempDir = path.join(WORKER_DIR, id);
     let logStream;
 
@@ -181,9 +211,30 @@ async function processQueue() {
       if (logStream) {
         logStream.write(`\n[SYSTEM] BUILD FAILED: ${error.message}\n`);
       }
-      await updateStatus(id, 'failed', {
-        error: error.message
-      });
+
+      // Check if it was cancelled
+      let isCancelled = false;
+      try {
+        const buildInfoRes = await axios.get(`${API_URL}/build/${id}`, {
+          headers: { 'x-api-key': API_KEY }
+        });
+        if (buildInfoRes.data && buildInfoRes.data.status === 'cancelled') {
+          isCancelled = true;
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      if (isCancelled) {
+        if (logStream) {
+          logStream.write(`[SYSTEM] Build aborted by user cancellation.\n`);
+        }
+        await updateStatus(id, 'cancelled');
+      } else {
+        await updateStatus(id, 'failed', {
+          error: error.message
+        });
+      }
     } finally {
       // Close file stream
       if (logStream) {
@@ -203,6 +254,9 @@ async function processQueue() {
       } catch (cleanupErr) {
         console.error('Error during cleanup:', cleanupErr.message);
       }
+
+      activeBuildId = null;
+      activeChildProcess = null;
     }
   }
 }

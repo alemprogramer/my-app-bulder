@@ -249,6 +249,37 @@ app.patch('/build/:id', authenticate, (req, res) => {
   }
 });
 
+// Route: Cancel Build Job
+app.post('/build/:id/cancel', authenticate, async (req, res) => {
+  try {
+    const build = db.getBuild(req.params.id);
+    if (!build) {
+      return res.status(404).json({ error: 'Build job not found.' });
+    }
+
+    if (build.status === 'completed' || build.status === 'failed' || build.status === 'cancelled') {
+      return res.status(400).json({ error: `Cannot cancel a build that is already ${build.status}.` });
+    }
+
+    // Update status in DB
+    db.updateBuild(req.params.id, { status: 'cancelled' });
+
+    // Append to logs that cancellation was requested
+    if (build.logsPath && fs.existsSync(build.logsPath)) {
+      fs.appendFileSync(build.logsPath, `\n[SYSTEM] Build cancellation requested by user.\n`, 'utf8');
+    }
+
+    // Publish cancellation message to Redis PubSub
+    await redis.publish('mybuild_cancellation', req.params.id);
+
+    console.log(`Cancellation requested for build ${req.params.id}`);
+    res.json({ success: true, message: 'Cancellation request sent successfully' });
+  } catch (error) {
+    console.error('Error cancelling build:', error);
+    res.status(500).json({ error: 'Failed to process build cancellation' });
+  }
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`========================================`);
