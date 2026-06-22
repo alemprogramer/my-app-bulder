@@ -3,9 +3,9 @@
   "version": "1.0.2",
   "repository": {
     "type": "git",
-    "url": "https://github.com/username/my-package.git"
+    "url": "https://github.com/alemprogramer/my-app-builder"
   },
-  "homepage": "https://github.com/username/my-package#readme",
+  "homepage": "https://github.com/alemprogramer/my-app-builder",
   "description": "CLI tool for self-hosted Expo mobile app build system",
   "main": "src/index.js",
   "bin": {
