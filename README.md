@@ -8,7 +8,7 @@
 
 ### ধাপ ১: GitHub-এ কোড পুশ করা (ল্যাপটপ থেকে)
 
-প্রথমে আপনার লোকাল কোডগুলো GitHub-এ পুশ করুন। আপনার রিপোজিটরি হিসেবে ইতিমধ্যে `alemprogramer/my-app-bulder` সেট করা হয়েছে। টার্মিনালে নিচের কমান্ডগুলো রান করুন:
+প্রথমে আপনার লোকাল কোডগুলো GitHub-এ পুশ করুন। আপনার রিপোজিটরি হিসেবে ইতিমধ্যে `alemprogramer/my-app-builder` সেট করা হয়েছে। টার্মিনালে নিচের কমান্ডগুলো রান করুন:
 
 ```bash
 git add .
@@ -30,7 +30,7 @@ git push -u origin main
 
 ২. সার্ভারে সরাসরি এই ওয়ান-কমান্ড ইনস্টলারটি রান করুন:
    ```bash
-   curl -sL https://raw.githubusercontent.com/alemprogramer/my-app-bulder/main/scripts/install.sh | bash
+   curl -sL https://raw.githubusercontent.com/alemprogramer/my-app-builder/main/scripts/install.sh | bash
    ```
 
 ৩. স্ক্রিপ্টটি রান হওয়া শেষ হলে টার্মিনালে এইরকম একটি কনফিগারেশন মেসেজ দেখতে পাবেন:

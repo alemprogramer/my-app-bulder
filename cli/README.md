@@ -6,6 +6,18 @@ Using this CLI, you can upload local Expo project archives to your build server,
 
 ---
 
+## 🖥️ VPS Server Setup (One-Command Setup)
+
+Before using the CLI, you must set up your backend API and worker on an Ubuntu VPS (recommended: minimum 4GB RAM, 2 Core CPU).
+
+To install and run the entire build system on your VPS with a single command, SSH into your VPS and run:
+```bash
+curl -sL https://raw.githubusercontent.com/alemprogramer/my-app-builder/main/scripts/install.sh | bash
+```
+Once the installation completes, copy the **API Server URL** and **API Access Key** printed in the terminal.
+
+---
+
 ## 📦 Installation
 
 Install the package globally via npm:
