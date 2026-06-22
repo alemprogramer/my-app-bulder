@@ -39,11 +39,11 @@ git push -u origin main
    ✔ installation completed successfully!
    ==================================================
    
-   ✔ Backend running on http://123.45.67.89:3000
+   ✔ Backend running on http://123.45.67.89:4000
    ✔ Worker running under PM2
    ✔ Redis connected
    
-   API Server URL:  http://123.45.67.89:3000
+   API Server URL:  http://123.45.67.89:4000
    API Access Key:  a1b2c3d4e5f6g7h8...
    ```
    **API Server URL** এবং **API Access Key** টি নোট করে রাখুন।
@@ -54,15 +54,15 @@ git push -u origin main
 
 আপনার ল্যাপটপে কোনো Android Studio বা JDK লাগবে না, শুধু Node.js থাকলেই হবে।
 
-১. আপনার ল্যাপটপের টার্মিনালে প্রজেক্টের রুটে এসে CLI গ্লোবালি ইনস্টল করুন:
+১. আপনার ল্যাপটপের টার্মিনাল থেকে CLI-টি গ্লোবালি ইনস্টল করুন:
    ```bash
-   npm install -g ./cli
+   npm install -g mybuilder-cli
    ```
    *(ইনস্টলেশন চলাকালীন সময়েই টার্মিনাল আপনার কাছে স্বয়ংক্রিয়ভাবে **VPS URL** এবং **API Key** জানতে চাইবে। সেগুলো দিয়ে দিলে সেটআপ সম্পন্ন হয়ে যাবে।)*
 
 ২. যদি কোনো কারণে ইনস্টলেশনের সময় ইনপুট দিতে না পারেন, তবে পরবর্তীতে নিচের কমান্ডটি রান করে নতুন করে কানেক্ট করতে পারবেন:
    ```bash
-   mybuild init http://YOUR_VPS_IP:3000 YOUR_API_ACCESS_KEY
+   mybuild init http://YOUR_VPS_IP:4000 YOUR_API_ACCESS_KEY
    ```
 
 ---

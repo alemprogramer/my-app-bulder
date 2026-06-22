@@ -1,4 +1,4 @@
-# mybuild-cli
+# mybuilder-cli
 
 Command Line Interface (CLI) for **mybuild**—a complete, self-hosted Expo mobile app build system (EAS clone) designed to compile React Native / Expo projects on your own VPS.
 
@@ -11,9 +11,8 @@ Using this CLI, you can upload local Expo project archives to your build server,
 Install the package globally via npm:
 
 ```bash
-npm install -g mybuild-cli
+npm install -g mybuilder-cli
 ```
-*(Note: If you renamed your published package, replace `mybuild-cli` with your custom package name).*
 
 ---
 
