@@ -1,5 +1,5 @@
 {
-  "name": "mybuild-cli",
+  "name": "mybuilder-cli",
   "version": "1.0.0",
   "description": "CLI tool for self-hosted Expo mobile app build system",
   "main": "src/index.js",

@@ -1,5 +1,5 @@
 {
-  "name": "myexpobulder-root",
+  "name": "mybuilder",
   "version": "1.0.0",
   "description": "Root workspace for mybuild - self-hosted Expo mobile app build system",
   "private": true,
