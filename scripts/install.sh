@@ -147,7 +147,7 @@ cd "$INSTALL_DIR/api"
 npm install --production
 
 cat <<EOF > .env
-PORT=3000
+PORT=4000
 API_KEY=${API_KEY}
 REDIS_URL=redis://127.0.0.1:6379
 DATA_DIR=${INSTALL_DIR}/data
@@ -160,7 +160,7 @@ npm install --production
 JDK_PATH=$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")
 
 cat <<EOF > .env
-API_URL=http://127.0.0.1:3000
+API_URL=http://127.0.0.1:4000
 API_KEY=${API_KEY}
 REDIS_URL=redis://127.0.0.1:6379
 WORKER_DIR=/tmp/mybuild-worker
@@ -187,14 +187,14 @@ echo "=================================================="
 echo "✔ installation completed successfully!"
 echo "=================================================="
 echo ""
-echo "✔ Backend running on http://${IP_ADDR}:3000"
+echo "✔ Backend running on http://${IP_ADDR}:4000"
 echo "✔ Worker running under PM2"
 echo "✔ Redis connected"
 echo ""
-echo "API Server URL:  http://${IP_ADDR}:3000"
+echo "API Server URL:  http://${IP_ADDR}:4000"
 echo "API Access Key:  ${API_KEY}"
 echo ""
 echo "=================================================="
 echo "⚙ To connect your CLI, execute the command below:"
-echo "mybuild init http://${IP_ADDR}:3000 ${API_KEY}"
+echo "mybuild init http://${IP_ADDR}:4000 ${API_KEY}"
 echo "=================================================="
