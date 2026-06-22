@@ -323,11 +323,11 @@ program
           console.log('No builds found on this server.');
           return;
         }
-        console.log(String('ID').padEnd(25) + String('PROJECT').padEnd(20) + String('STATUS').padEnd(12) + String('CREATED'));
-        console.log(''.padEnd(70, '-'));
+        console.log(String('ID').padEnd(30) + String('PROJECT').padEnd(20) + String('STATUS').padEnd(12) + String('CREATED'));
+        console.log(''.padEnd(80, '-'));
         builds.slice(0, 10).forEach(b => {
           console.log(
-            String(b.id).padEnd(25) + 
+            String(b.id).padEnd(30) + 
             String(b.projectName).padEnd(20) + 
             String(b.status.toUpperCase()).padEnd(12) + 
             new Date(b.createdAt).toLocaleString()

@@ -131,7 +131,16 @@ app.post('/build', authenticate, upload.single('file'), async (req, res) => {
 // Route: Get All Builds
 app.get('/builds', authenticate, (req, res) => {
   try {
-    const builds = db.getBuilds();
+    const rawBuilds = db.getBuilds();
+    const builds = rawBuilds.map(b => {
+      // Create a shallow copy to prevent mutating local DB in-memory cache directly
+      const bCopy = { ...b };
+      if (bCopy.status === 'completed') {
+        const protocol = req.secure ? 'https' : 'http';
+        bCopy.downloadUrl = `${protocol}://${req.headers.host}/builds/download/${bCopy.id}`;
+      }
+      return bCopy;
+    });
     res.json(builds);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve builds' });
@@ -145,7 +154,15 @@ app.get('/build/:id', authenticate, (req, res) => {
     if (!build) {
       return res.status(404).json({ error: 'Build job not found.' });
     }
-    res.json(build);
+    
+    // Create copy for dynamic response decoration
+    const buildCopy = { ...build };
+    if (buildCopy.status === 'completed') {
+      const protocol = req.secure ? 'https' : 'http';
+      buildCopy.downloadUrl = `${protocol}://${req.headers.host}/builds/download/${buildCopy.id}`;
+    }
+    
+    res.json(buildCopy);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve build details' });
   }
