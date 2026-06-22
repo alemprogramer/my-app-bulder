@@ -4,7 +4,7 @@
 set -e
 
 # Configuration
-REPO_URL="https://github.com/alemprogramer/my-app-bulder.git" # User should replace this with their repo URL
+REPO_URL="git@github.com:alemprogramer/my-app-bulder.git" # User should replace this with their repo URL
 INSTALL_DIR="/opt/mybuild"
 ANDROID_SDK_DIR="/opt/android-sdk"
 JDK_VERSION="17"
