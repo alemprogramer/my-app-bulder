@@ -28,6 +28,81 @@ function askQuestion(query) {
   }));
 }
 
+// Helper to choose build type using Arrow Keys (TTY) or simple prompt (non-TTY)
+async function chooseBuildType() {
+  const question = 'Select build type:';
+  const options = [
+    'Release (Production - ready for Google Play Store / sharing)',
+    'Debug (Development - for expo-dev-client / testing)'
+  ];
+
+  if (!process.stdin.isTTY) {
+    console.log(question);
+    options.forEach((opt, idx) => console.log(`  ${idx + 1}) ${opt}`));
+    const choice = await askQuestion('Enter choice (1 or 2, default: 1): ');
+    return choice === '2' ? 'debug' : 'release';
+  }
+
+  return new Promise((resolve) => {
+    let cursor = 0;
+    
+    // Hide standard cursor
+    process.stdout.write('\u001B[?25l');
+    
+    const render = () => {
+      readline.cursorTo(process.stdout, 0);
+      readline.clearScreenDown(process.stdout);
+      
+      process.stdout.write(`\u001b[33m?\u001b[39m \u001b[1m${question}\u001b[22m\n`);
+      options.forEach((opt, idx) => {
+        if (idx === cursor) {
+          process.stdout.write(`\u001b[36m❯ ${opt}\u001b[39m\n`);
+        } else {
+          process.stdout.write(`  ${opt}\n`);
+        }
+      });
+      
+      readline.moveCursor(process.stdout, 0, -(options.length + 1));
+    };
+
+    render();
+
+    readline.emitKeypressEvents(process.stdin);
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    
+    const onKeypress = (str, key) => {
+      if (key.ctrl && key.name === 'c') {
+        process.stdout.write('\u001B[?25h');
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        process.exit(130);
+      }
+      
+      if (key.name === 'up') {
+        cursor = (cursor - 1 + options.length) % options.length;
+        render();
+      } else if (key.name === 'down') {
+        cursor = (cursor + 1) % options.length;
+        render();
+      } else if (key.name === 'return' || key.name === 'enter') {
+        process.stdin.removeListener('keypress', onKeypress);
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        
+        readline.moveCursor(process.stdout, 0, options.length + 1);
+        process.stdout.write('\u001B[?25h');
+        
+        console.log(`✔ Selected: \u001b[36m${options[cursor]}\u001b[39m\n`);
+        
+        resolve(cursor === 1 ? 'debug' : 'release');
+      }
+    };
+    
+    process.stdin.on('keypress', onKeypress);
+  });
+}
+
 // Config management helpers
 function loadConfig() {
   if (!fs.existsSync(CONFIG_FILE)) {
@@ -253,15 +328,7 @@ program
         return;
       }
     } else {
-      console.log('Select build type:');
-      console.log('  1) Release (Production - ready for Google Play Store / sharing)');
-      console.log('  2) Debug (Development - for expo-dev-client / testing)');
-      const choice = await askQuestion('Enter choice (1 or 2, default: 1): ');
-      if (choice === '2') {
-        buildType = 'debug';
-      } else {
-        buildType = 'release';
-      }
+      buildType = await chooseBuildType();
     }
 
     try {
