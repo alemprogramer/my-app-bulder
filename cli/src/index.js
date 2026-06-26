@@ -6,6 +6,7 @@ const readline = require('readline');
 const axios = require('axios');
 const FormData = require('form-data');
 const archiver = require('archiver');
+const QRCode = require('qrcode');
 
 const CONFIG_DIR = path.join(os.homedir(), '.mybuild');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -100,6 +101,20 @@ async function chooseBuildType() {
     };
     
     process.stdin.on('keypress', onKeypress);
+  });
+}
+
+// Helper to print scannable QR Code
+function printQRCode(url) {
+  return new Promise((resolve) => {
+    QRCode.toString(url, { type: 'terminal', small: true }, function (err, str) {
+      if (!err) {
+        console.log(str);
+      } else {
+        console.error('Failed to generate QR Code:', err.message);
+      }
+      resolve();
+    });
   });
 }
 
@@ -366,6 +381,8 @@ program
           console.log(`✔ BUILD SUCCESSFUL`);
           console.log(`========================================`);
           console.log(`Download APK: ${buildInfo.downloadUrl}`);
+          console.log(`\nScan the QR code below to download direct to your device:`);
+          await printQRCode(buildInfo.downloadUrl);
           console.log(`========================================\n`);
         } else if (buildInfo.status === 'failed') {
           isFinished = true;
@@ -484,6 +501,8 @@ program
           console.log(`✔ BUILD SUCCESSFUL`);
           console.log(`========================================`);
           console.log(`Download APK: ${buildInfo.downloadUrl}`);
+          console.log(`\nScan the QR code below to download direct to your device:`);
+          await printQRCode(buildInfo.downloadUrl);
           console.log(`========================================\n`);
         } else if (buildInfo.status === 'failed') {
           isFinished = true;

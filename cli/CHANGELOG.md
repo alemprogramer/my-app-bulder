@@ -8,6 +8,7 @@ All notable changes to the `mybuilder-cli` package will be documented in this fi
 - **Build Type Selection:** Users can now choose between building a `release` or `debug` Android APK.
 - **Interactive Prompts:** Added a step to prompt users to choose the build type when executing `mybuild build android` without options.
 - **Command Option:** Added `-t, --type <type>` (e.g. `mybuild build android --type debug`) to directly select the build mode and skip the interactive menu.
+- **QR Code Terminal Integration:** Successful builds will now print a smooth, highly scannable Expo-style QR Code of the download URL directly to the terminal using the `qrcode` library, allowing immediate download on mobile devices.
 - **Status Metadata:** `mybuild status` and `mybuild status <build-id>` now display the active `Build Type` in the list and details view.
 
 ### Changed
