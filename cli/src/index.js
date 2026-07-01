@@ -147,6 +147,84 @@ function saveConfig(config) {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8');
 }
 
+// Yarn-style CLI helpers
+function formatDuration(ms) {
+  const totalSecs = Math.round(ms / 1000);
+  if (totalSecs < 60) return `(${totalSecs}s)`;
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  return `(${mins}m ${secs}s)`;
+}
+
+function getStageHeader(progress) {
+  if (progress === undefined || progress < 5) return '[1/4] Queued';
+  if (progress < 20) return '[1/4] Extracting';
+  if (progress < 40) return '[2/4] Dependencies';
+  if (progress < 55) return '[3/4] Prebuild';
+  return '[4/4] Compiling';
+}
+
+function formatYarnProgressBar(buildInfo, spinnerFrame, startTime) {
+  if (!buildInfo || buildInfo.progress === undefined) return '';
+  
+  const columns = process.stdout.columns || 80;
+  
+  const percent = buildInfo.progress;
+  const progressText = buildInfo.progressText || '';
+  
+  const stage = getStageHeader(percent);
+  
+  let resourcesStr = '';
+  if (buildInfo.cpu !== undefined && buildInfo.ram !== undefined) {
+    resourcesStr = ` | CPU: ${buildInfo.cpu}% | RAM: ${buildInfo.ram}`;
+  }
+  
+  const duration = formatDuration(Date.now() - startTime);
+  
+  const fixedLength = 2 + stage.length + 1 + 5 + duration.length + 1;
+  let remaining = columns - fixedLength - 2;
+  
+  let includeResources = true;
+  if (remaining - resourcesStr.length < 25) {
+    includeResources = false;
+  } else {
+    remaining -= resourcesStr.length;
+  }
+  
+  let barWidth = 20;
+  if (remaining < 30) {
+    barWidth = 10;
+  }
+  remaining -= (barWidth + 3);
+  
+  let statusDetails = '';
+  if (progressText && remaining > 10) {
+    statusDetails = progressText;
+    const maxStatusLen = Math.min(30, remaining - 4);
+    if (statusDetails.length > maxStatusLen) {
+      statusDetails = statusDetails.substring(0, Math.max(5, maxStatusLen - 3)) + '...';
+    }
+    statusDetails = ` - ${statusDetails}`;
+  }
+  
+  const filledWidth = Math.round((percent / 100) * barWidth);
+  const emptyWidth = barWidth - filledWidth;
+  const bar = '█'.repeat(filledWidth) + '░'.repeat(Math.max(0, emptyWidth));
+  
+  const styledSpinner = `\u001b[33m${spinnerFrame}\u001b[39m`;
+  const styledStage = `\u001b[32m${stage}\u001b[39m`;
+  const styledBar = `\u001b[36m[${bar}]\u001b[39m`;
+  const styledDuration = `\u001b[90m${duration}\u001b[39m`;
+  
+  let styledResources = '';
+  if (includeResources && resourcesStr) {
+    const cpuColor = buildInfo.cpu > 85 ? '\u001b[31m' : '\u001b[35m';
+    styledResources = ` \u001b[90m|\u001b[39m ${cpuColor}CPU: ${buildInfo.cpu}%\u001b[39m \u001b[90m|\u001b[39m \u001b[32mRAM: ${buildInfo.ram}\u001b[39m`;
+  }
+  
+  return `\r\u001b[K${styledSpinner} ${styledStage} ${styledBar} ${percent}%${statusDetails}${styledResources} ${styledDuration}`;
+}
+
 // Verify CLI state
 function getClient() {
   const config = loadConfig();
@@ -365,9 +443,27 @@ program
       let printedLines = 0;
       let isFinished = false;
       let hasProgressBarDrawn = false;
+      const startTime = Date.now();
+      const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      let spinnerIdx = 0;
+      let buildInfo = null;
 
       while (!isFinished) {
-        await new Promise(resolve => setTimeout(resolve, 2500));
+        // Local animation loop: 25 ticks of 100ms (2500ms total)
+        for (let tick = 0; tick < 25; tick++) {
+          if (isFinished) break;
+          
+          if (hasProgressBarDrawn && buildInfo) {
+            const spinnerFrame = spinnerFrames[spinnerIdx];
+            const barLine = formatYarnProgressBar(buildInfo, spinnerFrame, startTime);
+            process.stdout.write(barLine);
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 100));
+          spinnerIdx = (spinnerIdx + 1) % spinnerFrames.length;
+        }
+
+        if (isFinished) break;
 
         let logs = '';
         try {
@@ -388,7 +484,6 @@ program
           printedLines = logLines.length - 1;
         }
 
-        let buildInfo;
         try {
           const statusRes = await client.get(`/build/${buildId}`);
           buildInfo = statusRes.data;
@@ -433,19 +528,9 @@ program
         } else {
           // Draw CLI progress bar
           if (buildInfo.progress !== undefined) {
-            const percent = buildInfo.progress;
-            const barWidth = 30;
-            const filledWidth = Math.round((percent / 100) * barWidth);
-            const emptyWidth = barWidth - filledWidth;
-            const bar = '='.repeat(filledWidth) + (filledWidth < barWidth ? '>' : '') + ' '.repeat(Math.max(0, emptyWidth - 1));
-            const progressText = buildInfo.progressText || '';
-            
-            let resourcesStr = '';
-            if (buildInfo.cpu !== undefined && buildInfo.ram !== undefined) {
-              resourcesStr = ` \u001b[90m|\u001b[39m \u001b[35mCPU: ${buildInfo.cpu}%\u001b[39m \u001b[90m|\u001b[39m \u001b[32mRAM: ${buildInfo.ram}\u001b[39m`;
-            }
-            
-            process.stdout.write(`\r\u001b[36m[${bar}] ${percent}% - ${progressText}\u001b[39m${resourcesStr}`);
+            const spinnerFrame = spinnerFrames[spinnerIdx];
+            const barLine = formatYarnProgressBar(buildInfo, spinnerFrame, startTime);
+            process.stdout.write(barLine);
             hasProgressBarDrawn = true;
           }
         }
@@ -524,8 +609,28 @@ program
     let printedLines = 0;
     let isFinished = false;
     let hasProgressBarDrawn = false;
+    const startTime = Date.now();
+    const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    let spinnerIdx = 0;
+    let buildInfo = null;
 
     while (!isFinished) {
+      // Local animation loop: 25 ticks of 100ms (2500ms total)
+      for (let tick = 0; tick < 25; tick++) {
+        if (isFinished) break;
+        
+        if (hasProgressBarDrawn && buildInfo) {
+          const spinnerFrame = spinnerFrames[spinnerIdx];
+          const barLine = formatYarnProgressBar(buildInfo, spinnerFrame, startTime);
+          process.stdout.write(barLine);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        spinnerIdx = (spinnerIdx + 1) % spinnerFrames.length;
+      }
+
+      if (isFinished) break;
+
       // Fetch logs
       let logs = '';
       try {
@@ -552,7 +657,7 @@ program
       // Check status to stop loop when done
       try {
         const statusRes = await client.get(`/build/${id}`);
-        const buildInfo = statusRes.data;
+        buildInfo = statusRes.data;
 
         if (buildInfo.status === 'completed') {
           isFinished = true;
@@ -590,31 +695,18 @@ program
         } else {
           // Draw CLI progress bar
           if (buildInfo.progress !== undefined) {
-            const percent = buildInfo.progress;
-            const barWidth = 30;
-            const filledWidth = Math.round((percent / 100) * barWidth);
-            const emptyWidth = barWidth - filledWidth;
-            const bar = '='.repeat(filledWidth) + (filledWidth < barWidth ? '>' : '') + ' '.repeat(Math.max(0, emptyWidth - 1));
-            const progressText = buildInfo.progressText || '';
-            
-            let resourcesStr = '';
-            if (buildInfo.cpu !== undefined && buildInfo.ram !== undefined) {
-              resourcesStr = ` \u001b[90m|\u001b[39m \u001b[35mCPU: ${buildInfo.cpu}%\u001b[39m \u001b[90m|\u001b[39m \u001b[32mRAM: ${buildInfo.ram}\u001b[39m`;
-            }
-            
-            process.stdout.write(`\r\u001b[36m[${bar}] ${percent}% - ${progressText}\u001b[39m${resourcesStr}`);
+            const spinnerFrame = spinnerFrames[spinnerIdx];
+            const barLine = formatYarnProgressBar(buildInfo, spinnerFrame, startTime);
+            process.stdout.write(barLine);
             hasProgressBarDrawn = true;
           }
         }
       } catch (err) {
         // Ignore status failures
       }
-
-      if (!isFinished) {
-        await new Promise(resolve => setTimeout(resolve, 2500));
-      }
     }
   });
+
 // Command: Cancel Build
 program
   .command('cancel')
